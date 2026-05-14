@@ -40,3 +40,21 @@ td {
   height: 35px;
   font-size: 14px;
 }
+
+#course-info {
+  margin-top: 20px;
+  font-size: 24px;
+  color: #f0f; /* 粉色文字 */
+  min-height: 40px; /* 保持位置不跳动 */
+  display: inline-block;
+  padding-bottom: 5px;
+  /* text-decoration: underline; */
+}
+#course-info a {
+  color: #f0f; /* 粉色链接 */
+  text-decoration: underline;
+  cursor: pointer;
+}
+#course-info a:hover {
+  color: #00f;
+}
