@@ -7,6 +7,10 @@
     <link rel="stylesheet" href="./css/common.css">
     <script src="https://cdn.jsdelivr.net/npm/echarts@5.4.3/dist/echarts.min.js"></script>
     <style>
+        body {
+            background-color: #FFFAFA;
+        }
+
         h3 {
             text-align: center;
             margin: 20px 0 30px;
@@ -77,6 +81,7 @@
         // 基础折线图
         var basicLine = echarts.init(document.getElementById('basicLine'));
         basicLine.setOption({
+            backgroundColor: '#fff',
             title: { text: '2025年上半年月度销售额（万元）', left: 'center' },
             tooltip: { trigger: 'axis' },
             grid: { left: '3%', right: '4%', bottom: '3%', containLabel: true },
@@ -96,6 +101,7 @@
         // 堆叠折线图
         var stackLine = echarts.init(document.getElementById('stackLine'));
         stackLine.setOption({
+            backgroundColor: '#fff',
             title: { text: '各产品线季度收入（万元）', left: 'center' },
             tooltip: { trigger: 'axis' },
             legend: {
@@ -119,6 +125,7 @@
         // 区域面积图
         var areaChart = echarts.init(document.getElementById('areaChart'));
         areaChart.setOption({
+            backgroundColor: '#fff',
             title: { text: '近两年月均气温（℃）', left: 'center' },
             tooltip: { trigger: 'axis' },
             legend: {
@@ -154,6 +161,7 @@
         // 基础饼图
         var pieChart = echarts.init(document.getElementById('pieChart'));
         pieChart.setOption({
+            backgroundColor: '#fff',
             title: {
                 text: '2025年Q4各品类销售占比',
                 left: 'center',
