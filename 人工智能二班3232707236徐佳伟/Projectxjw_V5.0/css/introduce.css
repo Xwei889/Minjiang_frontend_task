@@ -1,0 +1,218 @@
+/**
+ * 课程简介页面样式
+ * 包含：文章布局、特性列表、动画效果
+ */
+
+/* ========== 文章容器 ========== */
+.intro-article {
+    max-width: 900px;
+    margin: 0 auto;
+    padding: 20px;
+}
+
+/* ========== 文章头部 ========== */
+.intro-header {
+    text-align: center;
+    margin-bottom: 30px;
+}
+
+.intro-header h3 {
+    color: #667eea;
+    font-size: 28px;
+    margin: 0;
+}
+
+.intro-header h3::after {
+    content: '';
+    display: block;
+    width: 60px;
+    height: 3px;
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    margin: 15px auto 0;
+    border-radius: 2px;
+}
+
+/* ========== 内容区域 ========== */
+.intro-content {
+    display: flex;
+    gap: 30px;
+    animation: fadeInUp 0.6s ease;
+}
+
+@keyframes fadeInUp {
+    from {
+        opacity: 0;
+        transform: translateY(20px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+/* ========== 文字介绍 ========== */
+.intro-text {
+    flex: 1;
+    background: #fff;
+    padding: 30px;
+    border-radius: 12px;
+    box-shadow: 0 2px 15px rgba(0, 0, 0, 0.05);
+}
+
+.intro-text p {
+    font-size: 16px;
+    line-height: 1.9;
+    color: #444;
+    margin-bottom: 20px;
+    text-indent: 0;
+}
+
+.intro-text p:last-child {
+    margin-bottom: 0;
+}
+
+/* 首字下沉效果 */
+.drop-cap {
+    float: left;
+    font-size: 48px;
+    line-height: 1;
+    padding-right: 10px;
+    padding-top: 5px;
+    color: #667eea;
+    font-weight: bold;
+}
+
+/* 强调文字 */
+.intro-text em {
+    font-style: normal;
+    color: #667eea;
+    font-weight: 500;
+    background: linear-gradient(to bottom, transparent 60%, #667eea20 60%);
+    padding: 0 2px;
+}
+
+/* 代码标记 */
+.intro-text code {
+    background: #f4f6ff;
+    color: #667eea;
+    padding: 2px 8px;
+    border-radius: 4px;
+    font-family: 'Consolas', 'Monaco', monospace;
+    font-size: 14px;
+    border: 1px solid #e0e5ff;
+}
+
+/* ========== 特性列表侧边栏 ========== */
+.intro-features {
+    width: 300px;
+    flex-shrink: 0;
+}
+
+.intro-features h4 {
+    color: #333;
+    font-size: 18px;
+    margin-bottom: 20px;
+    padding-bottom: 10px;
+    border-bottom: 2px solid #667eea;
+}
+
+.feature-list {
+    list-style: none;
+    padding: 0;
+}
+
+.feature-item {
+    display: flex;
+    gap: 15px;
+    padding: 20px;
+    background: #fff;
+    border-radius: 12px;
+    margin-bottom: 15px;
+    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
+    transition: all 0.3s ease;
+    animation: slideInRight 0.5s ease both;
+}
+
+.feature-item:nth-child(1) { animation-delay: 0.1s; }
+.feature-item:nth-child(2) { animation-delay: 0.2s; }
+.feature-item:nth-child(3) { animation-delay: 0.3s; }
+
+@keyframes slideInRight {
+    from {
+        opacity: 0;
+        transform: translateX(20px);
+    }
+    to {
+        opacity: 1;
+        transform: translateX(0);
+    }
+}
+
+.feature-item:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 8px 25px rgba(102, 126, 234, 0.15);
+}
+
+.feature-icon {
+    font-size: 36px;
+    flex-shrink: 0;
+}
+
+.feature-item strong {
+    display: block;
+    color: #333;
+    font-size: 16px;
+    margin-bottom: 5px;
+}
+
+.feature-item p {
+    font-size: 13px;
+    color: #666;
+    margin: 0;
+    line-height: 1.5;
+}
+
+/* ========== 响应式布局 ========== */
+@media (max-width: 768px) {
+    .intro-article {
+        padding: 15px;
+    }
+
+    .intro-content {
+        flex-direction: column;
+    }
+
+    .intro-features {
+        width: 100%;
+    }
+
+    .intro-text {
+        padding: 20px;
+    }
+
+    .intro-text p {
+        font-size: 15px;
+    }
+
+    .drop-cap {
+        font-size: 36px;
+    }
+
+    .intro-header h3 {
+        font-size: 22px;
+    }
+}
+
+@media (max-width: 480px) {
+    .intro-text {
+        padding: 15px;
+    }
+
+    .feature-item {
+        padding: 15px;
+    }
+
+    .feature-icon {
+        font-size: 28px;
+    }
+}

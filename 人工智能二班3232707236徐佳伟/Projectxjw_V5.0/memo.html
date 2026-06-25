@@ -1,0 +1,238 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>备忘录</title>
+    <link rel="stylesheet" href="./css/common.css">
+    <link rel="stylesheet" href="./css/memo.css">
+    <script src="js/utils.js"></script>
+</head>
+<body>
+    <article class="memo-article">
+        <!-- 顶部区域 -->
+        <header class="header-bar">
+            <h3>我的备忘录</h3>
+            <span id="todayDisplay" class="date-info">加载中...</span>
+            <button class="btn-add" onclick="showForm()">添加备忘录</button>
+        </header>
+
+        <!-- 表单区域 (默认隐藏) -->
+        <section>
+            <form id="form1" class="memo-form">
+                <div class="form-group">
+                    <label for="memoDate">日期：</label>
+                    <input type="date" id="memoDate">
+                </div>
+
+                <div class="form-group">
+                    <label for="memoTitle">备忘录：</label>
+                    <input type="text" placeholder="请输入备忘录信息" id="memoTitle">
+                </div>
+
+                <div class="form-group radio-group">
+                    <label>重要性：</label>
+                    <label><input type="radio" name="level" value="high" checked> 重要</label>
+                    <label><input type="radio" name="level" value="normal"> 普通</label>
+                </div>
+
+                <div class="form-group radio-group">
+                    <label>状态：</label>
+                    <label><input type="radio" name="done" value="false" checked> 未完成</label>
+                    <label><input type="radio" name="done" value="true"> 已完成</label>
+                </div>
+
+                <div class="btn-group">
+                    <input type="button" id="sureBtn" value="确定" onclick="addMemo()">
+                    <input type="reset" value="重置">
+                </div>
+            </form>
+        </section>
+
+        <!-- 列表显示区域 -->
+        <section>
+            <ul id="memoList" class="memo-list">
+                <!-- JS 渲染列表 -->
+            </ul>
+        </section>
+    </article>
+
+    <script>
+        /**
+         * 备忘录功能模块
+         * 包含：添加、显示、切换状态、本地存储
+         */
+
+        // 页面加载完成后执行
+        document.addEventListener("DOMContentLoaded", function() {
+            displayToday();
+            restore();
+        });
+
+        /**
+         * 显示今天的日期和星期
+         */
+        function displayToday() {
+            var today = new Date();
+            var weekStr = getWeek(today);
+            var dateStr = today.format("yyyy-MM-dd");
+
+            document.getElementById("todayDisplay").innerHTML =
+                '<span class="text">今天是 </span>' + dateStr + ' ' + weekStr;
+        }
+
+        /**
+         * 显示/隐藏表单
+         */
+        function showForm() {
+            var form = document.getElementById("form1");
+            var isHidden = window.getComputedStyle(form).display === "none";
+
+            if (isHidden) {
+                form.style.display = "block";
+                // 每次打开时，自动将日期设置为今天
+                document.getElementById("memoDate").valueAsDate = new Date();
+            } else {
+                form.style.display = "none";
+            }
+        }
+
+        /**
+         * 添加备忘录
+         */
+        function addMemo() {
+            // 获取表单数据
+            var date = document.getElementById("memoDate").value;
+            var desc = document.getElementById("memoTitle").value;
+            var important = document.querySelector('input[name="level"]:checked').value;
+            var done = document.querySelector('input[name="done"]:checked').value;
+
+            // 验证输入
+            if (!date || !desc) {
+                alert("请填写完整信息！");
+                return;
+            }
+
+            // 组装数据对象
+            var json = {
+                id: generateId(),
+                date: date,
+                desc: desc,
+                important: important,
+                done: done
+            };
+
+            // 保存数据
+            saveStorage(json);
+
+            // 刷新列表
+            restore();
+
+            // 清空并隐藏表单
+            document.getElementById("form1").reset();
+            document.getElementById("form1").style.display = "none";
+        }
+
+        /**
+         * 保存数据到本地存储
+         * @param {Object} newItem - 新的备忘录项
+         */
+        function saveStorage(newItem) {
+            var item = sessionStorage.getItem("memoData");
+            var data = [];
+
+            // 如果已有数据，解析出来
+            if (item) {
+                data = JSON.parse(item);
+            }
+
+            // 将新数据推入数组
+            data.push(newItem);
+
+            // 存回本地存储
+            sessionStorage.setItem("memoData", JSON.stringify(data));
+        }
+
+        /**
+         * 从本地存储恢复并显示数据
+         */
+        function restore() {
+            var desc = sessionStorage.getItem("memoData");
+            var ul = document.getElementById("memoList");
+            ul.innerHTML = ""; // 清空列表
+
+            if (!desc) return;
+
+            var items = JSON.parse(desc);
+
+            for (var i = 0; i < items.length; i++) {
+                var item = items[i];
+                if (!item || !item.desc) continue;
+
+                var li = document.createElement("li");
+
+                // 设置完成状态样式
+                if (item.done === "true") {
+                    li.classList.add("done");
+                }
+
+                // 拼接内容HTML
+                var contentHtml = '<span class="date">' + item.date + '</span>';
+                contentHtml += ' ' + item.desc;
+
+                // 重要性标签
+                if (item.important === "high") {
+                    contentHtml += ' <span class="important-tag">重要</span>';
+                } else {
+                    contentHtml += ' <span class="normal-tag">普通</span>';
+                }
+
+                // 状态标签
+                if (item.done === "true") {
+                    contentHtml += ' <span class="status-tag status-done">已完成</span>';
+                } else {
+                    contentHtml += ' <span class="status-tag status-undone">未完成</span>';
+                }
+
+                li.innerHTML = contentHtml;
+
+                // 添加点击事件：切换状态
+                (function(index) {
+                    li.onclick = function() {
+                        toggleStatus(index);
+                    };
+                })(i);
+
+                ul.appendChild(li);
+            }
+        }
+
+        /**
+         * 切换任务状态 (未完成 <-> 已完成)
+         * @param {number} index - 任务索引
+         */
+        function toggleStatus(index) {
+            var desc = sessionStorage.getItem("memoData");
+            if (!desc) return;
+
+            var items = JSON.parse(desc);
+
+            // 获取被点击的那一条数据
+            var currentItem = items[index];
+
+            // 切换状态
+            if (currentItem.done === "true") {
+                currentItem.done = "false";
+            } else {
+                currentItem.done = "true";
+            }
+
+            // 重新保存
+            sessionStorage.setItem("memoData", JSON.stringify(items));
+
+            // 重新渲染列表
+            restore();
+        }
+    </script>
+</body>
+</html>

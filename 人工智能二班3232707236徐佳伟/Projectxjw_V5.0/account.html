@@ -1,0 +1,415 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>记账本</title>
+    <link rel="stylesheet" href="./css/common.css">
+    <link rel="stylesheet" href="./css/account.css">
+    <script src="https://cdn.jsdelivr.net/npm/echarts@5.4.3/dist/echarts.min.js"></script>
+</head>
+<body>
+    <article class="account-article">
+        <header>
+            <h3>我的记账本</h3>
+        </header>
+
+        <!-- 汇总卡片 -->
+        <section class="summary-cards">
+            <div class="summary-card income">
+                <div class="label">总收入</div>
+                <div class="amount" id="totalIncome">¥0.00</div>
+            </div>
+            <div class="summary-card expense">
+                <div class="label">总支出</div>
+                <div class="amount" id="totalExpense">¥0.00</div>
+            </div>
+            <div class="summary-card balance">
+                <div class="label">结余</div>
+                <div class="amount" id="totalBalance">¥0.00</div>
+            </div>
+        </section>
+
+        <!-- 操作栏 -->
+        <section class="top-bar">
+            <button class="btn-add" onclick="showForm()">+ 添加记录</button>
+            <div class="filter-group">
+                <button class="filter-btn active" onclick="filterRecords('all', this)">全部</button>
+                <button class="filter-btn" onclick="filterRecords('income', this)">收入</button>
+                <button class="filter-btn" onclick="filterRecords('expense', this)">支出</button>
+            </div>
+        </section>
+
+        <!-- 添加记录表单 -->
+        <section>
+            <form id="accountForm" class="account-form">
+                <div class="form-row">
+                    <label for="accDate">日期：</label>
+                    <input type="date" id="accDate">
+                </div>
+                <div class="form-row">
+                    <label>类型：</label>
+                    <div class="type-group">
+                        <label><input type="radio" name="accType" value="expense" checked> 支出</label>
+                        <label><input type="radio" name="accType" value="income"> 收入</label>
+                    </div>
+                </div>
+                <div class="form-row">
+                    <label for="accCategory">分类：</label>
+                    <select id="accCategory">
+                        <option value="餐饮">餐饮</option>
+                        <option value="交通">交通</option>
+                        <option value="购物">购物</option>
+                        <option value="娱乐">娱乐</option>
+                        <option value="学习">学习</option>
+                        <option value="生活">生活</option>
+                        <option value="工资">工资</option>
+                        <option value="其他">其他</option>
+                    </select>
+                </div>
+                <div class="form-row">
+                    <label for="accAmount">金额：</label>
+                    <input type="number" id="accAmount" placeholder="请输入金额" min="0" step="0.01">
+                </div>
+                <div class="form-row">
+                    <label for="accNote">备注：</label>
+                    <input type="text" id="accNote" placeholder="可选，填写备注信息">
+                </div>
+                <div class="btn-row">
+                    <input type="button" value="确定" onclick="addRecord()">
+                    <input type="reset" value="重置">
+                </div>
+            </form>
+        </section>
+
+        <!-- 记录列表 -->
+        <section>
+            <ul id="recordList" class="record-list">
+                <!-- JS 渲染 -->
+            </ul>
+        </section>
+
+        <!-- 图表 -->
+        <section class="chart-section">
+            <div class="chart-card">
+                <div id="accountChart"></div>
+            </div>
+        </section>
+    </article>
+
+    <script>
+        /**
+         * 记账本功能模块
+         * 包含：添加记录、删除记录、筛选、图表展示
+         */
+
+        // ========== 分类图标映射 ==========
+        var categoryIcons = {
+            '餐饮': '🍜',
+            '交通': '🚌',
+            '购物': '🛒',
+            '娱乐': '🎮',
+            '学习': '📚',
+            '生活': '🏠',
+            '工资': '💰',
+            '其他': '📌'
+        };
+
+        // ========== 当前筛选状态 ==========
+        var currentFilter = 'all';
+
+        // ========== ECharts实例 ==========
+        var myChart = null;
+
+        // ========== 页面加载初始化 ==========
+        document.addEventListener('DOMContentLoaded', function() {
+            renderAll();
+            initChart();
+
+            // 监听类型变化，更新分类选项
+            document.querySelectorAll('input[name="accType"]').forEach(function(radio) {
+                radio.addEventListener('change', updateCategoryOptions);
+            });
+        });
+
+        /**
+         * 根据类型更新分类选项
+         */
+        function updateCategoryOptions() {
+            var type = document.querySelector('input[name="accType"]:checked').value;
+            var select = document.getElementById('accCategory');
+            select.innerHTML = '';
+
+            var opts;
+            if (type === 'income') {
+                opts = ['工资', '其他'];
+            } else {
+                opts = ['餐饮', '交通', '购物', '娱乐', '学习', '生活', '其他'];
+            }
+
+            opts.forEach(function(o) {
+                var option = document.createElement('option');
+                option.value = o;
+                option.textContent = o;
+                select.appendChild(option);
+            });
+        }
+
+        /**
+         * 显示/隐藏表单
+         */
+        function showForm() {
+            var form = document.getElementById('accountForm');
+            var isHidden = window.getComputedStyle(form).display === 'none';
+
+            if (isHidden) {
+                form.style.display = 'block';
+                document.getElementById('accDate').valueAsDate = new Date();
+            } else {
+                form.style.display = 'none';
+            }
+        }
+
+        /**
+         * 获取所有记录
+         * @returns {Array} 记录数组
+         */
+        function getRecords() {
+            var data = localStorage.getItem('accountRecords');
+            return data ? JSON.parse(data) : [];
+        }
+
+        /**
+         * 保存记录
+         * @param {Array} records - 记录数组
+         */
+        function saveRecords(records) {
+            localStorage.setItem('accountRecords', JSON.stringify(records));
+        }
+
+        /**
+         * 添加记录
+         */
+        function addRecord() {
+            var date = document.getElementById('accDate').value;
+            var type = document.querySelector('input[name="accType"]:checked').value;
+            var category = document.getElementById('accCategory').value;
+            var amount = parseFloat(document.getElementById('accAmount').value);
+            var note = document.getElementById('accNote').value;
+
+            // 验证输入
+            if (!date || isNaN(amount) || amount <= 0) {
+                alert('请填写完整的日期和金额！');
+                return;
+            }
+
+            // 创建记录对象
+            var record = {
+                id: Date.now(),
+                date: date,
+                type: type,
+                category: category,
+                amount: amount,
+                note: note
+            };
+
+            // 保存记录
+            var records = getRecords();
+            records.push(record);
+            saveRecords(records);
+
+            // 清空表单并隐藏
+            document.getElementById('accountForm').reset();
+            document.getElementById('accountForm').style.display = 'none';
+
+            // 刷新显示
+            renderAll();
+            updateChart();
+        }
+
+        /**
+         * 删除记录
+         * @param {number} id - 记录ID
+         */
+        function deleteRecord(id) {
+            if (!confirm('确定要删除这条记录吗？')) return;
+
+            var records = getRecords();
+            records = records.filter(function(r) { return r.id !== id; });
+            saveRecords(records);
+
+            renderAll();
+            updateChart();
+        }
+
+        /**
+         * 渲染所有内容
+         */
+        function renderAll() {
+            var records = getRecords();
+            updateSummary(records);
+            renderRecords(records);
+        }
+
+        /**
+         * 更新汇总数据
+         * @param {Array} records - 记录数组
+         */
+        function updateSummary(records) {
+            var income = 0;
+            var expense = 0;
+
+            records.forEach(function(r) {
+                if (r.type === 'income') {
+                    income += r.amount;
+                } else {
+                    expense += r.amount;
+                }
+            });
+
+            document.getElementById('totalIncome').textContent = '¥' + income.toFixed(2);
+            document.getElementById('totalExpense').textContent = '¥' + expense.toFixed(2);
+            document.getElementById('totalBalance').textContent = '¥' + (income - expense).toFixed(2);
+        }
+
+        /**
+         * 筛选记录
+         * @param {string} type - 筛选类型
+         * @param {HTMLElement} btn - 按钮元素
+         */
+        function filterRecords(type, btn) {
+            currentFilter = type;
+
+            // 更新按钮样式
+            document.querySelectorAll('.filter-btn').forEach(function(b) {
+                b.classList.remove('active');
+            });
+            btn.classList.add('active');
+
+            renderRecords(getRecords());
+        }
+
+        /**
+         * 渲染记录列表
+         * @param {Array} records - 记录数组
+         */
+        function renderRecords(records) {
+            var ul = document.getElementById('recordList');
+            ul.innerHTML = '';
+
+            // 筛选
+            var filtered = records;
+            if (currentFilter !== 'all') {
+                filtered = records.filter(function(r) { return r.type === currentFilter; });
+            }
+
+            // 按日期降序排列
+            filtered.sort(function(a, b) { return b.date.localeCompare(a.date); });
+
+            // 空状态提示
+            if (filtered.length === 0) {
+                ul.innerHTML = '<div class="empty-state">暂无记录，点击上方按钮添加</div>';
+                return;
+            }
+
+            // 渲染每条记录
+            filtered.forEach(function(r) {
+                var li = document.createElement('li');
+                li.className = 'record-item';
+
+                var icon = categoryIcons[r.category] || '📌';
+                var isIncome = r.type === 'income';
+
+                li.innerHTML =
+                    '<div class="record-left">' +
+                        '<div class="record-icon ' + (isIncome ? 'income-icon' : 'expense-icon') + '">' + icon + '</div>' +
+                        '<div class="record-info">' +
+                            '<div class="record-category">' + r.category + '</div>' +
+                            '<div class="record-note">' + (r.note || '') + '</div>' +
+                        '</div>' +
+                    '</div>' +
+                    '<div class="record-right">' +
+                        '<span class="record-amount ' + (isIncome ? 'income-text' : 'expense-text') + '">' +
+                            (isIncome ? '+' : '-') + '¥' + r.amount.toFixed(2) +
+                        '</span>' +
+                        '<span class="record-date">' + r.date + '</span>' +
+                        '<button class="record-delete" onclick="deleteRecord(' + r.id + ')">✕</button>' +
+                    '</div>';
+
+                ul.appendChild(li);
+            });
+        }
+
+        /**
+         * 初始化图表
+         */
+        function initChart() {
+            myChart = echarts.init(document.getElementById('accountChart'));
+            updateChart();
+
+            // 响应式调整
+            window.addEventListener('resize', function() {
+                if (myChart) myChart.resize();
+            });
+        }
+
+        /**
+         * 更新图表数据
+         */
+        function updateChart() {
+            if (!myChart) return;
+
+            var records = getRecords();
+
+            // 按月统计收入和支出
+            var monthData = {};
+            records.forEach(function(r) {
+                var month = r.date.substring(0, 7); // yyyy-MM
+                if (!monthData[month]) {
+                    monthData[month] = { income: 0, expense: 0 };
+                }
+                if (r.type === 'income') {
+                    monthData[month].income += r.amount;
+                } else {
+                    monthData[month].expense += r.amount;
+                }
+            });
+
+            var months = Object.keys(monthData).sort();
+            var incomeData = months.map(function(m) { return monthData[m].income; });
+            var expenseData = months.map(function(m) { return monthData[m].expense; });
+
+            // 如果没有数据，显示空图表
+            if (months.length === 0) {
+                months = ['暂无数据'];
+                incomeData = [0];
+                expenseData = [0];
+            }
+
+            myChart.setOption({
+                backgroundColor: '#fff',
+                title: { text: '月度收支趋势', left: 'center' },
+                tooltip: { trigger: 'axis' },
+                legend: { data: ['收入', '支出'], top: '8%' },
+                grid: { left: '3%', right: '4%', bottom: '3%', top: 60, containLabel: true },
+                xAxis: { type: 'category', data: months },
+                yAxis: { type: 'value' },
+                series: [
+                    {
+                        name: '收入',
+                        type: 'bar',
+                        data: incomeData,
+                        itemStyle: { color: '#67c23a', borderRadius: [4, 4, 0, 0] }
+                    },
+                    {
+                        name: '支出',
+                        type: 'bar',
+                        data: expenseData,
+                        itemStyle: { color: '#f56c6c', borderRadius: [4, 4, 0, 0] }
+                    }
+                ]
+            });
+        }
+    </script>
+</body>
+</html>

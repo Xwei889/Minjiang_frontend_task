@@ -1,0 +1,314 @@
+<!doctype html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>个人学习网站（徐佳伟）</title>
+    <link rel="shortcut icon" href="favicon.ico" type="image/x-icon" />
+    <link rel="stylesheet" href="./css/common.css" />
+    <link rel="stylesheet" href="./css/index.css" />
+    <link rel="stylesheet" href="./css/login.css" />
+    <link rel="stylesheet" href="./css/carousel.css" />
+    <script src="js/utils.js"></script>
+    <script src="js/login.js"></script>
+    <script src="js/carousel.js"></script>
+  </head>
+  <body>
+    <!-- ========== 页面头部区域 ========== -->
+    <header class="site-header">
+      <div class="header-content">
+        <h1 class="site-title">2025-2026学期课程学习平台</h1>
+        <div class="header-right">
+          <span id="current-time" class="time-display"></span>
+          <div class="user-area">
+            <span id="welcome-msg" class="welcome-msg"></span>
+            <button id="loginBtn" class="btn-login" onclick="showLoginModal()">
+              登录
+            </button>
+            <button
+              id="registerBtn"
+              class="btn-register"
+              onclick="showRegisterModal()"
+            >
+              注册
+            </button>
+            <button
+              id="logoutBtn"
+              class="btn-logout"
+              style="display: none"
+              onclick="logout()"
+            >
+              退出
+            </button>
+          </div>
+        </div>
+      </div>
+    </header>
+
+    <!-- ========== 导航栏 ========== -->
+    <nav class="main-nav">
+      <div class="nav-content">
+        <button class="nav-toggle" id="navToggle" onclick="toggleNav()">
+          <span></span><span></span><span></span>
+        </button>
+        <div class="nav-links" id="navLinks">
+          <a href="introduce.html" target="mainFrame" class="nav-link active">
+            <span class="nav-icon">📖</span>课程简介
+          </a>
+          <a href="schedule.html" target="mainFrame" class="nav-link">
+            <span class="nav-icon">📅</span>课表
+          </a>
+          <a href="book.html" target="mainFrame" class="nav-link">
+            <span class="nav-icon">📚</span>教材
+          </a>
+          <a href="memo.html" target="mainFrame" class="nav-link">
+            <span class="nav-icon">📝</span>备忘录
+          </a>
+          <a href="echart.html" target="mainFrame" class="nav-link">
+            <span class="nav-icon">📊</span>数据图表
+          </a>
+          <a href="account.html" target="mainFrame" class="nav-link">
+            <span class="nav-icon">💰</span>记账本
+          </a>
+          <a href="music.html" target="mainFrame" class="nav-link">
+            <span class="nav-icon">🎵</span>音乐播放器
+          </a>
+        </div>
+      </div>
+    </nav>
+
+    <!-- ========== 轮播图区域 ========== -->
+    <section class="carousel-section">
+      <div class="carousel-container" id="carousel">
+        <div class="carousel-track" id="carouselTrack">
+          <div class="carousel-slide active">
+            <div class="slide-content slide-1">
+              <h2>欢迎来到课程学习平台</h2>
+              <p>探索Web前端技术的无限可能</p>
+            </div>
+          </div>
+          <div class="carousel-slide">
+            <div class="slide-content slide-2">
+              <h2>HTML5 + CSS3 + JavaScript</h2>
+              <p>掌握现代Web开发三大核心技术</p>
+            </div>
+          </div>
+          <div class="carousel-slide">
+            <div class="slide-content slide-3">
+              <h2>响应式设计</h2>
+              <p>打造适配多终端的优秀用户体验</p>
+            </div>
+          </div>
+          <div class="carousel-slide">
+            <div class="slide-content slide-4">
+              <h2>数据可视化</h2>
+              <p>用ECharts呈现生动的数据图表</p>
+            </div>
+          </div>
+        </div>
+        <button class="carousel-btn carousel-prev" onclick="prevSlide()">
+          ❮
+        </button>
+        <button class="carousel-btn carousel-next" onclick="nextSlide()">
+          ❯
+        </button>
+        <div class="carousel-dots" id="carouselDots"></div>
+      </div>
+    </section>
+
+    <!-- ========== 主要内容区域 ========== -->
+    <main class="main-content">
+      <article class="content-article">
+        <!-- 子页面内容框架 -->
+        <section class="iframe-section">
+          <h2 class="section-title">功能模块</h2>
+          <iframe
+            src="introduce.html"
+            name="mainFrame"
+            id="mainFrame"
+            class="mainFrame"
+          ></iframe>
+        </section>
+      </article>
+    </main>
+
+    <!-- ========== 页脚区域 ========== -->
+    <footer class="site-footer">
+      <div class="footer-content">
+        <div class="footer-info">
+          <p>&copy; 闽江大学 计算机和大数据学院 人工智能专业</p>
+          <p>联系人：徐佳伟 &nbsp;|&nbsp; 学号：3232707236</p>
+        </div>
+        <div class="footer-links">
+          <a href="#top">返回顶部</a>
+        </div>
+      </div>
+    </footer>
+
+    <!-- ========== 登录弹窗 ========== -->
+    <div class="modal-overlay" id="loginModal">
+      <div class="modal-box">
+        <div class="modal-header">
+          <h3>用户登录</h3>
+          <button class="modal-close" onclick="closeLoginModal()">
+            &times;
+          </button>
+        </div>
+        <form
+          class="modal-form"
+          id="loginForm"
+          onsubmit="return handleLogin(event);"
+        >
+          <div class="form-group">
+            <label for="loginUsername">用户名</label>
+            <input
+              type="text"
+              id="loginUsername"
+              placeholder="请输入用户名"
+              required
+            />
+            <span class="error-tip" id="loginUsernameError"></span>
+          </div>
+          <div class="form-group">
+            <label for="loginPassword">密码</label>
+            <input
+              type="password"
+              id="loginPassword"
+              placeholder="请输入密码"
+              required
+            />
+            <span class="error-tip" id="loginPasswordError"></span>
+          </div>
+          <button type="submit" class="btn-submit">登 录</button>
+          <div class="form-footer">
+            还没有账号？<a
+              href="javascript:void(0)"
+              onclick="switchToRegister()"
+              >立即注册</a
+            >
+          </div>
+        </form>
+      </div>
+    </div>
+
+    <!-- ========== 注册弹窗 ========== -->
+    <div class="modal-overlay" id="registerModal">
+      <div class="modal-box">
+        <div class="modal-header">
+          <h3>用户注册</h3>
+          <button class="modal-close" onclick="closeRegisterModal()">
+            &times;
+          </button>
+        </div>
+        <form
+          class="modal-form"
+          id="registerForm"
+          onsubmit="return handleRegister(event);"
+        >
+          <div class="form-group">
+            <label for="regUsername">用户名</label>
+            <input
+              type="text"
+              id="regUsername"
+              placeholder="6-20位，字母开头，字母数字下划线"
+              oninput="validateUsername()"
+            />
+            <span class="error-tip" id="regUsernameError"></span>
+            <span class="success-tip" id="regUsernameSuccess"></span>
+          </div>
+          <div class="form-group">
+            <label for="regPassword">密码</label>
+            <input
+              type="password"
+              id="regPassword"
+              placeholder="8-20位，包含大小写字母、数字和特殊字符"
+              oninput="validatePassword()"
+            />
+            <span class="error-tip" id="regPasswordError"></span>
+            <div class="password-strength" id="passwordStrength">
+              <div class="strength-bar" id="strengthBar"></div>
+            </div>
+            <span class="strength-text" id="strengthText"></span>
+          </div>
+          <div class="form-group">
+            <label for="regConfirmPwd">确认密码</label>
+            <input
+              type="password"
+              id="regConfirmPwd"
+              placeholder="请再次输入密码"
+              oninput="validateConfirmPassword()"
+            />
+            <span class="error-tip" id="regConfirmPwdError"></span>
+            <span class="success-tip" id="regConfirmPwdSuccess"></span>
+          </div>
+          <button type="submit" class="btn-submit">注 册</button>
+          <div class="form-footer">
+            已有账号？<a href="javascript:void(0)" onclick="switchToLogin()"
+              >去登录</a
+            >
+          </div>
+        </form>
+      </div>
+    </div>
+
+    <!-- ========== 登录成功提示弹窗 ========== -->
+    <div class="toast-container" id="toastContainer"></div>
+
+    <!-- ========== 主脚本 ========== -->
+    <script>
+      // ========== iframe自适应高度 ==========
+      function autoResize() {
+        var iframe = document.getElementById("mainFrame");
+        if (iframe) {
+          try {
+            var doc = iframe.contentDocument || iframe.contentWindow.document;
+            var scrollHeight =
+              doc.documentElement.scrollHeight || doc.body.scrollHeight;
+            iframe.style.height = Math.max(scrollHeight, 600) + "px";
+          } catch (e) {
+            iframe.style.height = "800px";
+          }
+        }
+      }
+
+      // ========== 导航栏激活状态 ==========
+      function initNavActive() {
+        var links = document.querySelectorAll(".nav-link");
+        links.forEach(function (link) {
+          link.addEventListener("click", function () {
+            links.forEach(function (l) {
+              l.classList.remove("active");
+            });
+            this.classList.add("active");
+          });
+        });
+      }
+
+      // ========== 移动端导航切换 ==========
+      function toggleNav() {
+        var navLinks = document.getElementById("navLinks");
+        var navToggle = document.getElementById("navToggle");
+        navLinks.classList.toggle("show");
+        navToggle.classList.toggle("active");
+      }
+
+      // ========== 初始化 ==========
+      document.addEventListener("DOMContentLoaded", function () {
+        initNavActive();
+        initCarousel();
+        checkLoginStatus();
+
+        // iframe加载完成后自适应
+        var iframe = document.getElementById("mainFrame");
+        if (iframe) {
+          iframe.onload = autoResize;
+        }
+      });
+
+      // 窗口大小改变时重新调整
+      window.addEventListener("resize", function () {
+        autoResize();
+      });
+    </script>
+  </body>
+</html>

@@ -1,0 +1,304 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>音乐播放器</title>
+    <link rel="stylesheet" href="./css/common.css">
+    <link rel="stylesheet" href="./css/music.css">
+</head>
+<body>
+    <article class="music-article">
+        <header>
+            <h3>🎵 我的音乐播放器</h3>
+        </header>
+
+        <!-- 播放器主体 -->
+        <section class="player-wrapper">
+            <!-- 专辑封面 -->
+            <div class="album-cover" id="albumCover">
+                <span class="disc-icon">🎵</span>
+            </div>
+
+            <!-- 歌曲信息 -->
+            <div class="song-info">
+                <div class="song-title" id="songTitle">未选择歌曲</div>
+                <div class="song-artist" id="songArtist">--</div>
+            </div>
+
+            <!-- 进度条 -->
+            <div class="progress-bar">
+                <input type="range" id="progressRange" min="0" max="100" value="0">
+                <div class="progress-time">
+                    <span id="currentTime">00:00</span>
+                    <span id="totalTime">00:00</span>
+                </div>
+            </div>
+
+            <!-- 控制按钮 -->
+            <div class="controls">
+                <button class="mode-btn" id="modeBtn" onclick="switchMode()" title="播放模式">🔁</button>
+                <button class="ctrl-btn" onclick="prevSong()">⏮</button>
+                <button class="ctrl-btn play-btn" id="playBtn" onclick="togglePlay()">▶</button>
+                <button class="ctrl-btn" onclick="nextSong()">⏭</button>
+                <button class="ctrl-btn" id="favBtn" onclick="toggleFav()" title="收藏">🤍</button>
+            </div>
+
+            <!-- 音量控制 -->
+            <div class="volume-bar">
+                <span class="vol-icon">🔊</span>
+                <input type="range" id="volumeRange" min="0" max="100" value="80">
+            </div>
+
+            <!-- 播放列表 -->
+            <div class="playlist">
+                <div class="playlist-title">播放列表</div>
+                <div id="playlistContainer">
+                    <!-- JS 渲染 -->
+                </div>
+            </div>
+        </section>
+
+        <!-- 提示信息 -->
+        <aside class="tip-box">
+            <strong>📁 音频文件存放位置：</strong><br>
+            请将 MP3 音频文件放入 <strong>audio/</strong> 文件夹中，即：<br>
+            <code>Webxjw_V4.0/audio/你的音乐文件.mp3</code><br><br>
+            <strong>使用说明：</strong><br>
+            1. 将你的 .mp3 文件复制到 audio 文件夹<br>
+            2. 在下方 JS 代码的 playlist 数组中添加对应歌曲信息<br>
+            3. 刷新页面即可在播放列表中看到并播放
+        </aside>
+
+        <!-- 隐藏的音频元素 -->
+        <audio id="audioPlayer" preload="auto"></audio>
+    </article>
+
+    <script>
+        /**
+         * 音乐播放器功能模块
+         * 包含：播放控制、进度条、音量、播放列表、播放模式
+         */
+
+        // ========== 播放列表配置 ==========
+        var playlist = [
+            {
+                title: "王八蛋",
+                artist: "陶喆",
+                src: "audio/陶喆 - 王八蛋(Radio Edit).mp3"
+            },
+            {
+                title: "爱错",
+                artist: "王力宏",
+                src: "audio/王力宏 - 爱错 (2025 福利秀 Live).mp3"
+            },
+            {
+                title: "情人",
+                artist: "蔡徐坤",
+                src: "audio/蔡徐坤-情人.mp3"
+            }
+        ];
+
+        // ========== 播放器状态 ==========
+        var currentIndex = 0;
+        var isPlaying = false;
+        var playMode = "loop"; // loop: 列表循环, single: 单曲循环, random: 随机播放
+        var isFav = false;
+
+        // ========== DOM元素引用 ==========
+        var audio = document.getElementById("audioPlayer");
+        var playBtn = document.getElementById("playBtn");
+        var albumCover = document.getElementById("albumCover");
+        var songTitle = document.getElementById("songTitle");
+        var songArtist = document.getElementById("songArtist");
+        var progressRange = document.getElementById("progressRange");
+        var currentTimeEl = document.getElementById("currentTime");
+        var totalTimeEl = document.getElementById("totalTime");
+        var volumeRange = document.getElementById("volumeRange");
+        var modeBtn = document.getElementById("modeBtn");
+        var favBtn = document.getElementById("favBtn");
+
+        // ========== 初始化 ==========
+        document.addEventListener("DOMContentLoaded", function() {
+            renderPlaylist();
+            if (playlist.length > 0) {
+                loadSong(0);
+            }
+            // 设置初始音量
+            audio.volume = volumeRange.value / 100;
+        });
+
+        /**
+         * 渲染播放列表
+         */
+        function renderPlaylist() {
+            var container = document.getElementById("playlistContainer");
+            container.innerHTML = "";
+
+            playlist.forEach(function(song, index) {
+                var div = document.createElement("div");
+                div.className = "playlist-item" + (index === currentIndex ? " active" : "");
+                div.innerHTML =
+                    '<div class="item-left">' +
+                        '<span class="item-index">' + (index + 1) + '</span>' +
+                        '<div>' +
+                            '<div class="item-title">' + song.title + '</div>' +
+                            '<div class="item-artist">' + song.artist + '</div>' +
+                        '</div>' +
+                    '</div>';
+
+                div.onclick = function() {
+                    loadSong(index);
+                    play();
+                };
+                container.appendChild(div);
+            });
+        }
+
+        /**
+         * 加载歌曲
+         * @param {number} index - 歌曲索引
+         */
+        function loadSong(index) {
+            currentIndex = index;
+            var song = playlist[index];
+            audio.src = song.src;
+            songTitle.textContent = song.title;
+            songArtist.textContent = song.artist;
+            renderPlaylist();
+        }
+
+        /**
+         * 播放/暂停切换
+         */
+        function togglePlay() {
+            if (playlist.length === 0) return;
+            if (isPlaying) {
+                pause();
+            } else {
+                play();
+            }
+        }
+
+        /**
+         * 播放
+         */
+        function play() {
+            if (playlist.length === 0) return;
+            audio.play().catch(function(e) {
+                console.log("播放失败：", e);
+            });
+            isPlaying = true;
+            playBtn.textContent = "⏸";
+            albumCover.classList.add("playing");
+        }
+
+        /**
+         * 暂停
+         */
+        function pause() {
+            audio.pause();
+            isPlaying = false;
+            playBtn.textContent = "▶";
+            albumCover.classList.remove("playing");
+        }
+
+        /**
+         * 上一首
+         */
+        function prevSong() {
+            if (playlist.length === 0) return;
+            var index;
+            if (playMode === "random") {
+                index = Math.floor(Math.random() * playlist.length);
+            } else {
+                index = (currentIndex - 1 + playlist.length) % playlist.length;
+            }
+            loadSong(index);
+            if (isPlaying) play();
+        }
+
+        /**
+         * 下一首
+         */
+        function nextSong() {
+            if (playlist.length === 0) return;
+            var index;
+            if (playMode === "random") {
+                index = Math.floor(Math.random() * playlist.length);
+            } else {
+                index = (currentIndex + 1) % playlist.length;
+            }
+            loadSong(index);
+            if (isPlaying) play();
+        }
+
+        /**
+         * 切换播放模式
+         */
+        function switchMode() {
+            var modes = ["loop", "single", "random"];
+            var icons = { loop: "🔁", single: "🔂", random: "🔀" };
+            var modeNames = { loop: "列表循环", single: "单曲循环", random: "随机播放" };
+
+            var idx = modes.indexOf(playMode);
+            playMode = modes[(idx + 1) % modes.length];
+            modeBtn.textContent = icons[playMode];
+            modeBtn.title = modeNames[playMode];
+        }
+
+        /**
+         * 收藏切换
+         */
+        function toggleFav() {
+            isFav = !isFav;
+            favBtn.textContent = isFav ? "❤️" : "🤍";
+        }
+
+        // ========== 音频事件 ==========
+
+        // 时间更新
+        audio.addEventListener("timeupdate", function() {
+            if (audio.duration) {
+                var percent = (audio.currentTime / audio.duration) * 100;
+                progressRange.value = percent;
+                currentTimeEl.textContent = formatTime(audio.currentTime);
+                totalTimeEl.textContent = formatTime(audio.duration);
+            }
+        });
+
+        // 拖动进度条
+        progressRange.addEventListener("input", function() {
+            if (audio.duration) {
+                audio.currentTime = (progressRange.value / 100) * audio.duration;
+            }
+        });
+
+        // 音量控制
+        volumeRange.addEventListener("input", function() {
+            audio.volume = volumeRange.value / 100;
+        });
+
+        // 歌曲播放结束
+        audio.addEventListener("ended", function() {
+            if (playMode === "single") {
+                audio.currentTime = 0;
+                play();
+            } else {
+                nextSong();
+            }
+        });
+
+        /**
+         * 格式化时间
+         * @param {number} seconds - 秒数
+         * @returns {string} 格式化后的时间字符串
+         */
+        function formatTime(seconds) {
+            var min = Math.floor(seconds / 60);
+            var sec = Math.floor(seconds % 60);
+            return (min < 10 ? "0" : "") + min + ":" + (sec < 10 ? "0" : "") + sec;
+        }
+    </script>
+</body>
+</html>
