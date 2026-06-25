@@ -1,4 +1,4 @@
-# 📖 个人课程学习平台 V5.0
+<img width="1277" height="680" alt="image" src="https://github.com/user-attachments/assets/c9fd06fb-f39c-4829-9331-4d717e7f0443" /># 📖 个人课程学习平台 V5.0
 
 
 一个基于纯前端技术（HTML5 + CSS3 + JavaScript）借助vibecoding构建的个人课程学习平台，集成了课程管理、数据可视化、音乐播放等多种实用功能模块。
@@ -11,6 +11,8 @@
 - 自动轮播图展示（4 张幻灯片，支持手动切换）
 - iframe 嵌入子页面，自适应内容高度
 - 实时时钟显示
+  <img width="1277" height="680" alt="image" src="https://github.com/user-attachments/assets/f34ae4a3-ba7a-45cd-8b2d-53c49bee6b79" />
+
 
 ### 🔐 用户系统
 - 用户注册（用户名 / 密码强度校验、确认密码）
